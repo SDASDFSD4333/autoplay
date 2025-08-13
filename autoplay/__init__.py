@@ -9,6 +9,20 @@ class Autoplay(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_audio_track_start(self, guild, track):
+        """Kill Red's autoplay as soon as a track starts."""
+        audio_cog: Audio = self.bot.get_cog("Audio")
+        if not audio_cog:
+            return
+        try:
+            player = await audio_cog.get_player(guild)
+            if player.autoplay:
+                player.autoplay = False
+                print(f"[Autoplay] Disabled core autoplay for {guild.name}")
+        except Exception as e:
+            print(f"[Autoplay] Error disabling core autoplay: {e}")
+
+    @commands.Cog.listener()
     async def on_audio_track_end(self, guild, track, reason):
         print(f"[Autoplay] Track ended in {guild.name}: {track.uri} (reason: {reason})")
 
@@ -23,16 +37,14 @@ class Autoplay(commands.Cog):
 
         try:
             player = await audio_cog.get_player(guild)
+            player.autoplay = False  # extra guarantee
         except Exception as e:
             print(f"[Autoplay] Could not get player: {e}")
             return
 
-        # Force disable Redbot's built-in autoplay on every track end
-        try:
-            player.autoplay = False
-            print("[Autoplay] Core Audio autoplay disabled")
-        except Exception as e:
-            print(f"[Autoplay] Could not disable core autoplay: {e}")
+        if not player or not player.connected:
+            print("[Autoplay] No active player")
+            return
 
         if not player.queue.is_empty():
             print("[Autoplay] Queue not empty — skipping")
