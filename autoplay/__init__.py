@@ -1,5 +1,6 @@
 import re
 import aiohttp
+import asyncio
 from redbot.core import commands
 from redbot.core.bot import Red
 from redbot.cogs.audio.core import Audio
@@ -7,20 +8,6 @@ from redbot.cogs.audio.core import Audio
 class Autoplay(commands.Cog):
     def __init__(self, bot: Red):
         self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_audio_track_start(self, guild, track):
-        """Kill Red's autoplay as soon as a track starts."""
-        audio_cog: Audio = self.bot.get_cog("Audio")
-        if not audio_cog:
-            return
-        try:
-            player = await audio_cog.get_player(guild)
-            if player.autoplay:
-                player.autoplay = False
-                print(f"[Autoplay] Disabled core autoplay for {guild.name}")
-        except Exception as e:
-            print(f"[Autoplay] Error disabling core autoplay: {e}")
 
     @commands.Cog.listener()
     async def on_audio_track_end(self, guild, track, reason):
@@ -37,7 +24,6 @@ class Autoplay(commands.Cog):
 
         try:
             player = await audio_cog.get_player(guild)
-            player.autoplay = False  # extra guarantee
         except Exception as e:
             print(f"[Autoplay] Could not get player: {e}")
             return
@@ -46,8 +32,16 @@ class Autoplay(commands.Cog):
             print("[Autoplay] No active player")
             return
 
+        # Wait a moment for Red's autoplay to fire
+        await asyncio.sleep(1)
+
+        # Clear whatever it queued
+        player.queue.clear()
+        print("[Autoplay] Cleared queue to override core autoplay")
+
+        # Only continue if queue is now empty
         if not player.queue.is_empty():
-            print("[Autoplay] Queue not empty — skipping")
+            print("[Autoplay] Queue not empty after clearing — skipping")
             return
 
         if not track.uri.startswith("https://www.youtube.com/watch"):
