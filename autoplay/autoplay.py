@@ -12,8 +12,9 @@ class Autoplay(commands.Cog):
     async def on_audio_track_end(self, guild, track, reason):
         print(f"[Autoplay] Track ended in {guild.name}: {track.uri} (reason: {reason})")
 
-        if reason != "FINISHED":
+         if reason not in ("FINISHED", "STOPPED"):
             return
+
 
         audio_cog: Audio = self.bot.get_cog("Audio")
         if not audio_cog:
