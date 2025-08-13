@@ -1,0 +1,12 @@
+{
+  "author": ["YourName"],
+  "install_msg": "Thank you for installing Autoplay.",
+  "name": "autoplay",
+  "short": "Autoplays related YouTube tracks",
+  "description": "Adds YouTube-style autoplay to Redbot's Audio cog.",
+  "tags": ["music", "autoplay", "audio"],
+  "requirements": [],
+  "hidden": false,
+  "disabled": false,
+  "type": "COG"
+}
