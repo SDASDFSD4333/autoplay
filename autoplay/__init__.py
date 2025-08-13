@@ -48,5 +48,6 @@ class Autoplay(commands.Cog):
             print(f"[Autoplay] Error fetching related video: {e}")
         return None
 
-def setup(bot):
-    bot.add_cog(Autoplay(bot))
+async def setup(bot):
+    await bot.add_cog(Autoplay(bot))
+
