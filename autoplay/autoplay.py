@@ -26,4 +26,44 @@ class Autoplay(commands.Cog):
             print("[Autoplay] Player missing or queue not empty")
             return
 
-        if not track.uri.startswith("https://ww
+        if not track.uri.startswith("https://www.youtube.com/watch"):
+            print("[Autoplay] Track is not a YouTube video")
+            return
+
+        related = await self.get_related_youtube(track.uri)
+        print(f"[Autoplay] Related video: {related}")
+        if not related:
+            return
+
+        try:
+            await audio_cog.play(guild, related)
+            print(f"[Autoplay] Queued related track: {related}")
+        except Exception as e:
+            print(f"[Autoplay] Failed to play related track: {e}")
+
+    async def get_related_youtube(self, url):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    html = await resp.text()
+            matches = re.findall(r'watch\?v=([\w-]{11})', html)
+            seen = set()
+            for vid in matches:
+                if vid not in url and vid not in seen:
+                    seen.add(vid)
+                    return f"https://www.youtube.com/watch?v={vid}"
+        except Exception as e:
+            print(f"[Autoplay] Error fetching related video: {e}")
+        return None
+
+    @commands.command()
+    async def testautoplay(self, ctx, url: str):
+        """Force autoplay logic manually with a YouTube URL."""
+        related = await self.get_related_youtube(url)
+        if related:
+            await ctx.send(f"Related video: {related}")
+        else:
+            await ctx.send("No related video found.")
+
+async def setup(bot):
+    await bot.add_cog(Autoplay(bot))
