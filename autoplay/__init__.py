@@ -21,14 +21,18 @@ class Autoplay(commands.Cog):
             print("[Autoplay] Audio cog not found")
             return
 
-        player = audio_cog._player_manager.get(guild.id)
-        if not player:
-            print("[Autoplay] No player found")
+        try:
+            player = await audio_cog.get_player(guild)
+        except Exception as e:
+            print(f"[Autoplay] Could not get player: {e}")
             return
 
-        # Disable Redbot's built-in autoplay *every time*
-        player.autoplay = False
-        print("[Autoplay] Core Audio autoplay disabled")
+        # Force disable Redbot's built-in autoplay on every track end
+        try:
+            player.autoplay = False
+            print("[Autoplay] Core Audio autoplay disabled")
+        except Exception as e:
+            print(f"[Autoplay] Could not disable core autoplay: {e}")
 
         if not player.queue.is_empty():
             print("[Autoplay] Queue not empty — skipping")
@@ -75,10 +79,3 @@ class Autoplay(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Autoplay(bot))
-
-    # Disable core autoplay on all existing players (on load)
-    audio_cog = bot.get_cog("Audio")
-    if audio_cog:
-        for player in audio_cog._player_manager.values():
-            player.autoplay = False
-            print(f"[Autoplay] Disabled core autoplay for player in guild {player.guild.name}")
